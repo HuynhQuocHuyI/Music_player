@@ -26,7 +26,7 @@ Music Player là một ứng dụng nghe nhạc được xây dựng bằng Flut
 ## 📱 Hỗ trợ nền tảng
 
 - ✅ Android
-- ✅ Windows
+
 - ✅ iOS (có thể mở rộng)
 
 ## 🚀 Cài đặt
