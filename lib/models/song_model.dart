@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class SongModel {
   final String id;
   final String title;
@@ -7,6 +9,7 @@ class SongModel {
   final Duration? duration;
   final String? albumArt;
   final int? fileSize;
+  final Uint8List? bytes;
 
   SongModel({
     required this.id,
@@ -17,6 +20,7 @@ class SongModel {
     this.duration,
     this.albumArt,
     this.fileSize,
+    this.bytes,
   });
 
   factory SongModel.fromJson(Map<String, dynamic> json) {

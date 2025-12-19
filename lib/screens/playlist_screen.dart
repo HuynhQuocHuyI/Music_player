@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/playlist_provider.dart';
 import '../widgets/playlist_card.dart';
+import '../models/song_model.dart';
+import 'playlist_detail_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
-  const PlaylistScreen({super.key});
+  final List<SongModel> allSongs;
+  
+  const PlaylistScreen({super.key, this.allSongs = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +73,17 @@ class PlaylistScreen extends StatelessWidget {
                     final playlist = provider.playlists[index];
                     return PlaylistCard(
                       playlist: playlist,
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlaylistDetailScreen(
+                              playlist: playlist,
+                              allSongs: allSongs,
+                            ),
+                          ),
+                        );
+                      },
                       onDelete: () => provider.deletePlaylist(playlist.id),
                     );
                   },

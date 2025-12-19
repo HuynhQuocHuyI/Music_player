@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 import '../models/playback_state_model.dart';
@@ -27,11 +29,29 @@ class AudioPlayerService {
     );
   }
 
-  Future<void> loadAudio(String filePath) async {
+  Future<void> loadAudio(String filePath, {Uint8List? bytes}) async {
     try {
-      await _audioPlayer.setFilePath(filePath);
+      if (kIsWeb && bytes != null) {
+        final source = AudioSource.uri(
+          Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg'),
+        );
+        await _audioPlayer.setAudioSource(source);
+      } else {
+        await _audioPlayer.setFilePath(filePath);
+      }
     } catch (e) {
       throw Exception('Error loading audio: $e');
+    }
+  }
+
+  Future<void> loadAudioFromBytes(Uint8List bytes) async {
+    try {
+      final source = AudioSource.uri(
+        Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg'),
+      );
+      await _audioPlayer.setAudioSource(source);
+    } catch (e) {
+      throw Exception('Error loading audio from bytes: $e');
     }
   }
 

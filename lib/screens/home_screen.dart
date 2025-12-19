@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -33,13 +34,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _requestPermissions() async {
-    final hasStoragePermission =
-        await _permissionService.requestStoragePermission();
-    final hasAudioPermission =
-        await _permissionService.requestAudioPermission();
+    if (!kIsWeb) {
+      final hasStoragePermission =
+          await _permissionService.requestStoragePermission();
+      final hasAudioPermission =
+          await _permissionService.requestAudioPermission();
 
-    if (hasStoragePermission || hasAudioPermission) {
-      await _loadSongs();
+      if (hasStoragePermission || hasAudioPermission) {
+        await _loadSongs();
+      }
     }
     setState(() {
       _isLoading = false;
@@ -47,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadSongs() async {
+    if (kIsWeb) return;
     try {
       final songs = await _playlistService.getAllSongs();
       setState(() {
@@ -57,25 +61,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _removeSong(int index) {
+    setState(() {
+      _songs.removeAt(index);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Song removed')),
+    );
+  }
+
   Future<void> _pickAndPlayMusic() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.audio,
         allowMultiple: true,
+        withData: kIsWeb,
       );
 
       if (result != null && result.files.isNotEmpty) {
         List<SongModel> pickedSongs = [];
         for (var file in result.files) {
-          if (file.path != null) {
-            String fileName = file.name.replaceAll(RegExp(r'\.[^.]+$'), '');
-            pickedSongs.add(SongModel(
-              id: DateTime.now().millisecondsSinceEpoch.toString() + file.name,
-              title: fileName,
-              artist: 'Unknown Artist',
-              filePath: file.path!,
-              fileSize: file.size,
-            ));
+          String fileName = file.name.replaceAll(RegExp(r'\.[^.]+$'), '');
+          
+          if (kIsWeb) {
+            if (file.bytes != null) {
+              pickedSongs.add(SongModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString() + file.name,
+                title: fileName,
+                artist: 'Unknown Artist',
+                filePath: file.name,
+                fileSize: file.size,
+                bytes: file.bytes,
+              ));
+            }
+          } else {
+            if (file.path != null) {
+              pickedSongs.add(SongModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString() + file.name,
+                title: fileName,
+                artist: 'Unknown Artist',
+                filePath: file.path!,
+                fileSize: file.size,
+              ));
+            }
           }
         }
 
@@ -123,8 +151,12 @@ class _HomeScreenState extends State<HomeScreen> {
             index: _currentIndex,
             children: [
               _buildHomeContent(),
-              AllSongsScreen(songs: _songs, onRefresh: _loadSongs),
-              const PlaylistScreen(),
+              AllSongsScreen(
+                songs: _songs, 
+                onRefresh: _loadSongs,
+                onDeleteSong: _removeSong,
+              ),
+              PlaylistScreen(allSongs: _songs),
               const SettingsScreen(),
             ],
           ),
@@ -265,6 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return SongTile(
                         song: song,
                         onTap: () => _playSong(index),
+                        onDelete: () => _removeSong(index),
                       );
                     },
                     childCount: _songs.length,

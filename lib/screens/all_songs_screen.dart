@@ -8,11 +8,13 @@ import 'now_playing_screen.dart';
 class AllSongsScreen extends StatefulWidget {
   final List<SongModel> songs;
   final VoidCallback onRefresh;
+  final Function(int)? onDeleteSong;
 
   const AllSongsScreen({
     super.key,
     required this.songs,
     required this.onRefresh,
+    this.onDeleteSong,
   });
 
   @override
@@ -97,9 +99,13 @@ class _AllSongsScreenState extends State<AllSongsScreen> {
                 itemCount: _filteredSongs.length,
                 itemBuilder: (context, index) {
                   final song = _filteredSongs[index];
+                  final originalIndex = widget.songs.indexOf(song);
                   return SongTile(
                     song: song,
                     onTap: () => _playSong(context, index),
+                    onDelete: widget.onDeleteSong != null && originalIndex >= 0
+                        ? () => widget.onDeleteSong!(originalIndex)
+                        : null,
                   );
                 },
               ),

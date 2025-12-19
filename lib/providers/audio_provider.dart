@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song_model.dart';
@@ -51,7 +52,13 @@ class AudioProvider extends ChangeNotifier {
     if (index < 0 || index >= _playlist.length) return;
     _currentIndex = index;
     final song = _playlist[index];
-    await _audioService.loadAudio(song.filePath);
+    
+    if (kIsWeb && song.bytes != null) {
+      await _audioService.loadAudioFromBytes(song.bytes!);
+    } else {
+      await _audioService.loadAudio(song.filePath, bytes: song.bytes);
+    }
+    
     await _audioService.play();
     await _storageService.saveLastPlayed(song.id);
     notifyListeners();
